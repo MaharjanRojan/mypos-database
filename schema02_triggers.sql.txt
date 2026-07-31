@@ -1,0 +1,33 @@
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_reduce_inventory_after_sale$$
+CREATE TRIGGER trg_reduce_inventory_after_sale
+AFTER INSERT ON sale_items
+FOR EACH ROW
+BEGIN
+    UPDATE inventory
+    SET quantity = quantity - NEW.quantity
+    WHERE product_id = NEW.product_id;
+END$$
+
+DROP TRIGGER IF EXISTS trg_restore_inventory_after_delete$$
+CREATE TRIGGER trg_restore_inventory_after_delete
+AFTER DELETE ON sale_items
+FOR EACH ROW
+BEGIN
+    UPDATE inventory
+    SET quantity = quantity + OLD.quantity
+    WHERE product_id = OLD.product_id;
+END$$
+
+DROP TRIGGER IF EXISTS trg_adjust_inventory_after_update$$
+CREATE TRIGGER trg_adjust_inventory_after_update
+AFTER UPDATE ON sale_items
+FOR EACH ROW
+BEGIN
+    UPDATE inventory
+    SET quantity = quantity + (OLD.quantity - NEW.quantity)
+    WHERE product_id = NEW.product_id;
+END$$
+
+DELIMITER ;
